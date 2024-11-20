@@ -1,18 +1,32 @@
-name: SLSA Go releaser
+name: Release Go Binaries
+
 on:
-  workflow_dispatch:
   release:
     types: [created]
 
-permissions: read-all
+permissions:
+  contents: write
 
 jobs:
-  build:
-    permissions:
-      id-token: write
-      contents: write
-      actions: read
-    uses: slsa-framework/slsa-github-generator/.github/workflows/builder_go_slsa3.yml@v1.9.0
-    with:
-      go-version: 1.23.2
-      evaluated-envs: "VERSION:${{github.ref_name}}"
+  releases-matrix:
+    name: Release Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64, arm64]
+        exclude:
+          - goarch: arm64
+            goos: windows
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: wangyoucao577/go-release-action@v1
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
+        binary_name: "passgen"
+        project_path: "./cmd/passgen"
+        extra_files: LICENSE README.md
