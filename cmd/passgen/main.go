@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"passgen/internal/bip39"
 	"passgen/internal/clipboard"
 	"passgen/internal/generator"
 	"passgen/internal/qr"
@@ -12,30 +13,93 @@ import (
 
 func main() {
 	var length int
+	var useBip39 bool
+	var useShort bool
+	var lang string
+
 	flag.IntVar(&length, "length", 0, "Password length (default 24-28)")
 	flag.IntVar(&length, "l", 0, "Password length (shorthand)")
+	flag.BoolVar(&useBip39, "bip39", false, "Generate BIP39 mnemonic")
+	flag.BoolVar(&useBip39, "b", false, "Generate BIP39 mnemonic (shorthand)")
+	flag.BoolVar(&useShort, "12", false, "Generate 12-word mnemonic (default is 24)")
+
+	// Флаги для языков
+	var langRu, langEn, langJp, langFr, langIt, langKo, langCn, langEs bool
+	flag.BoolVar(&langRu, "ru", false, "Use Russian wordlist")
+	flag.BoolVar(&langEn, "en", false, "Use English wordlist")
+	flag.BoolVar(&langJp, "jp", false, "Use Japanese wordlist")
+	flag.BoolVar(&langFr, "fr", false, "Use French wordlist")
+	flag.BoolVar(&langIt, "it", false, "Use Italian wordlist")
+	flag.BoolVar(&langKo, "ko", false, "Use Korean wordlist")
+	flag.BoolVar(&langCn, "cn", false, "Use Chinese wordlist")
+	flag.BoolVar(&langEs, "es", false, "Use Spanish wordlist")
+
 	flag.Parse()
 
-	gen := generator.New(24, 28)
+	var result string
+	var err error
 
-	password, err := gen.Generate(length)
-	if err != nil {
-		log.Fatalf("Password generation error: %v", err)
-	}
+	if useBip39 {
+		// Определяем язык из флагов
+		lang = "en" // по умолчанию
+		switch {
+		case langRu:
+			lang = "ru"
+		case langJp:
+			lang = "jp"
+		case langFr:
+			lang = "fr"
+		case langIt:
+			lang = "it"
+		case langKo:
+			lang = "ko"
+		case langCn:
+			lang = "cn"
+		case langEs:
+			lang = "es"
+		}
 
-	fmt.Printf("Generated password: %s\n", password)
+		mnemo, err := bip39.New(lang)
+		if err != nil {
+			log.Fatalf("Failed to initialize BIP39: %v", err)
+		}
 
-	if err := clipboard.Copy(password); err != nil {
-		log.Printf("Failed to copy password to clipboard: %v", err)
+		// Выбираем длину энтропии в зависимости от флага
+		entropy := bip39.ENT256 // 24 слова по умолчанию
+		if useShort {
+			entropy = bip39.ENT128 // 12 слов
+		}
+
+		result, err = mnemo.Generate(entropy)
+		if err != nil {
+			log.Fatalf("Failed to generate mnemonic: %v", err)
+		}
+
+		wordCount := "24"
+		if useShort {
+			wordCount = "12"
+		}
+		fmt.Printf("Generated BIP39 mnemonic (%s words, %s):\n%s\n", wordCount, lang, result)
 	} else {
-		fmt.Println("Password copied to clipboard")
+		gen := generator.New(24, 28)
+		result, err = gen.Generate(length)
+		if err != nil {
+			log.Fatalf("Password generation error: %v", err)
+		}
+		fmt.Printf("Generated password: %s\n", result)
 	}
 
-	qrCode, err := qr.Generate(password)
+	if err := clipboard.Copy(result); err != nil {
+		log.Printf("Failed to copy to clipboard: %v", err)
+	} else {
+		fmt.Println("Copied to clipboard")
+	}
+
+	qrCode, err := qr.Generate(result)
 	if err != nil {
 		log.Printf("Failed to create QR code: %v", err)
 	} else {
-		fmt.Println("\nQR code for password:")
+		fmt.Println("\nQR code:")
 		fmt.Println(qrCode)
 	}
 }

@@ -2,106 +2,147 @@
 
 # 🔐 PassGen
 
-### Cryptographically Secure Password Generator with QR Codes
+### Secure Password & BIP39 Mnemonic Generator
 
 [![Go Version](https://img.shields.io/badge/Go-1.23.2-00ADD8?style=flat-square&logo=go)](https://golang.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+
+![Demo](demo.gif)
 
 </div>
 
-## 🌟 About
+## 🎯 Overview
 
-PassGen isn't just another password generator. It's a powerful command-line tool that combines Unix system security with modern features for convenient use. Using a cryptographically secure random number generator (/dev/urandom), PassGen creates truly random passwords and makes them easily accessible through clipboard and QR codes.
+PassGen combines secure password generation with BIP39 mnemonic phrase support, offering:
+- 🛡️ Cryptographically secure generation using /dev/urandom
+- 🌍 Multi-language BIP39 support
+- 📋 Instant clipboard integration
+- 📱 Terminal QR code display
 
-## ✨ Features
+## ⚡ Quick Start
 
-- 🔒 **Maximum Security**: Utilizing /dev/urandom for cryptographic strength
-- 📏 **Flexible Length**: Default 24-28 characters with customization options
-- 📋 **Smart Clipboard**: Instant copying without extra characters
-- 📱 **Terminal QR Codes**: Quick transfer to mobile devices
-- 🎯 **Simple Interface**: Minimalistic and intuitive CLI
-- 💻 **Cross-Platform**: Works on Linux, macOS, and Windows
+### Installation Options
 
-## 🚀 Installation
-
+1. Latest release (recommended):
 ```bash
 go install github.com/0xEtherPunk/passGen/cmd/passgen@latest
 ```
 
-## 🎮 Usage
-
-### Basic Usage
+2. Specific version:
 ```bash
+go install github.com/0xEtherPunk/passGen/cmd/passgen@v1.1.0
+```
+
+3. From source:
+```bash
+# Clone repository
+git clone https://github.com/0xEtherPunk/passGen.git
+cd passGen
+
+# Install locally
+go install ./cmd/passgen
+```
+
+4. Manual build:
+```bash
+git clone https://github.com/0xEtherPunk/passGen.git
+cd passGen
+go build -o passgen cmd/passgen/main.go
+sudo mv passgen /usr/local/bin/  # Optional: make globally available
+```
+
+## 🛠️ Usage
+
+### 🔑 Password Generation
+```bash
+# Standard password (24-28 characters)
 passgen
+
+# Custom length password
+passgen -l 32
 ```
 
-### With Custom Length
+### 🎲 BIP39 Mnemonic Generation
+
+#### Default Usage
 ```bash
-passgen -l 32        # short version
-passgen -length 32   # full version
+passgen -b         # 24 words in English
+passgen -b -12     # 12 words in English
 ```
 
-## 🔧 How It Works
-
-PassGen uses a powerful Unix pipeline for password generation:
-
+#### 🌐 Supported Languages
 ```bash
-strings /dev/urandom | tr -d "\n[:space:]" | fold -w$((24 + $(od -An -N2 -i /dev/urandom) % 4)) | head -n1
+# Full phrases (24 words)
+passgen -b -en     # 🇬🇧 English (default)
+passgen -b -ru     # 🇷🇺 Russian (Русский)
+passgen -b -jp     # 🇯🇵 Japanese (日本語)
+passgen -b -cn     # 🇨🇳 Chinese (简体中文)
+passgen -b -fr     # 🇫🇷 French (Français)
+passgen -b -it     # 🇮🇹 Italian (Italiano)
+passgen -b -ko     # 🇰🇷 Korean (한국어)
+passgen -b -es     # 🇪🇸 Spanish (Español)
+
+# Short phrases (12 words)
+passgen -b -12 -en    # 🇬🇧 English
+passgen -b -12 -ru    # 🇷🇺 Русский
+passgen -b -12 -jp    # 🇯🇵 日本語
+passgen -b -12 -cn    # 🇨🇳 简体中文
+passgen -b -12 -fr    # 🇫🇷 Français
+passgen -b -12 -it    # 🇮🇹 Italiano
+passgen -b -12 -ko    # 🇰🇷 한국어
+passgen -b -12 -es    # 🇪🇸 Español
 ```
 
-This process:
-1. 📖 Extracts readable strings from /dev/urandom
-2. 🧹 Cleans spaces and newlines
-3. 📏 Formats to desired length
-4. ✂️ Selects the first line of output
+### 📤 Output Features
+Every generated password or mnemonic is automatically:
+- 📝 Displayed in terminal
+- 📋 Copied to clipboard
+- 📱 Converted to QR code
 
-## 🏗 Project Structure
-
+## 🏗️ Project Structure
 ```
 passGen/
 ├── cmd/
 │   └── passgen/
-│       └── main.go       # Entry point
+│       └── main.go           # 🎯 Entry point
 ├── internal/
-│   ├── generator/        # Password generation
-│   ├── clipboard/        # Clipboard operations
-│   └── qr/              # QR code generator
+│   ├── bip39/               # 🎲 BIP39 implementation
+│   │   ├── wordlist/        # 🌐 Language wordlists
+│   │   │   ├── en.txt      # English
+│   │   │   ├── ru.txt      # Russian
+│   │   │   ├── jp.txt      # Japanese
+│   │   │   ├── cn.txt      # Chinese
+│   │   │   ├── fr.txt      # French
+│   │   │   ├── it.txt      # Italian
+│   │   │   ├── ko.txt      # Korean
+│   │   │   └── es.txt      # Spanish
+│   │   ├── bip39.go        # Core BIP39 logic
+│   │   └── wordlist.go     # Wordlist handling
+│   ├── clipboard/           # 📋 Clipboard operations
+│   ├── generator/           # 🎯 Password generation
+│   └── qr/                  # 📱 QR code generation
 └── README.md
 ```
 
-## 📦 Dependencies
+## ⚙️ Requirements
+- 🔧 Go 1.23.2 or higher
+- 🐧 Unix-like system (for /dev/urandom)
 
-- [atotto/clipboard](https://github.com/atotto/clipboard) - Cross-platform clipboard
-- [skip2/go-qrcode](https://github.com/skip2/go-qrcode) - QR code generation
-
-## 🛠 Requirements
-
-- Go 1.23.2+
-- Unix-like system (for /dev/urandom)
-- UTF-8 terminal support
-
-## 🤝 Contributing
-
-Your contributions are welcome! Here's how you can help:
-
-1. 🍴 Fork the repository
-2. 🌿 Create your feature branch (`git checkout -b feature/amazing`)
-3. 🔧 Make your changes
-4. 📝 Submit a Pull Request
-
-## 📜 License
-
+## 📄 License
 MIT © [0xEtherPunk](https://github.com/0xEtherPunk)
-
-## 💖 Acknowledgments
-
-Special thanks to the Unix community for the inspiration and tools that make this project possible.
 
 ---
 
 <div align="center">
-  
-### Made with ❤️ for the Community
+
+### 🌟 If you find PassGen useful, please star it on GitHub!
 
 </div>
+
+---
+
+> 🌈 **Pro tip**: Pipe the output through `lolcat` for some extra color magic:
+> ```bash
+> passgen | lolcat
+> passgen -b -12 -cn | lolcat
+> ```
