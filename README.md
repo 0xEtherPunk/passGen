@@ -70,27 +70,32 @@ passgen -b         # 24 words in English
 passgen -b -12     # 12 words in English
 ```
 
-#### 🌐 Supported Languages
+### 🔍 Help Command
 ```bash
-# Full phrases (24 words)
-passgen -b -en     # 🇬🇧 English (default)
-passgen -b -ru     # 🇷🇺 Russian (Русский)
-passgen -b -jp     # 🇯🇵 Japanese (日本語)
-passgen -b -cn     # 🇨🇳 Chinese (简体中文)
-passgen -b -fr     # 🇫🇷 French (Français)
-passgen -b -it     # 🇮🇹 Italian (Italiano)
-passgen -b -ko     # 🇰🇷 Korean (한국어)
-passgen -b -es     # 🇪🇸 Spanish (Español)
+# Show all available options
+passgen -help
+passgen -h
 
-# Short phrases (12 words)
-passgen -b -12 -en    # 🇬🇧 English
-passgen -b -12 -ru    # 🇷🇺 Русский
-passgen -b -12 -jp    # 🇯🇵 日本語
-passgen -b -12 -cn    # 🇨🇳 简体中文
-passgen -b -12 -fr    # 🇫🇷 Français
-passgen -b -12 -it    # 🇮🇹 Italiano
-passgen -b -12 -ko    # 🇰🇷 한국어
-passgen -b -12 -es    # 🇪🇸 Español
+# Output includes:
+  -12
+        Generate 12-word mnemonic (default is 24)
+  -b, -bip39
+        Generate BIP39 mnemonic
+  -l, -length int
+        Password length (default 24-28)
+  -o string
+        Output file for QR code (PNG format)
+  -s int
+        QR code size in pixels (default: 256)
+# Language options:
+  -en    Use English wordlist (default)    # 🇬🇧
+  -ru    Use Russian wordlist              # 🇷🇺
+  -jp    Use Japanese wordlist             # 🇯🇵
+  -cn    Use Chinese wordlist              # 🇨🇳
+  -fr    Use French wordlist               # 🇫🇷
+  -it    Use Italian wordlist              # 🇮🇹
+  -ko    Use Korean wordlist               # 🇰🇷
+  -es    Use Spanish wordlist              # 🇪🇸
 ```
 
 ### 📤 Output Features
@@ -98,6 +103,33 @@ Every generated password or mnemonic is automatically:
 - 📝 Displayed in terminal
 - 📋 Copied to clipboard
 - 📱 Converted to QR code
+
+### QR Code Options
+```bash
+# Display QR in terminal (default)
+passgen -b
+
+# Save QR as PNG file (default size: 256x256)
+passgen -b -o mnemonic.png
+
+# Save QR with custom size (in pixels)
+passgen -b -o mnemonic.png -s 512    # 512x512
+passgen -b -o mnemonic.png -s 1024   # 1024x1024
+
+# Save QR with custom path
+passgen -b -o ~/Documents/mnemonic.png
+passgen -b -o ../backup/phrase.png
+
+# Examples with different options combined
+passgen -b -12 -ru -o russian-12words.png -s 512     # Russian 12-word phrase, 512x512 QR
+passgen -b -jp -o ~/backup/japanese.png -s 1024      # Japanese 24-word phrase, 1024x1024 QR
+passgen -l 32 -o password.png                        # 32-char password QR
+```
+
+All outputs (password/mnemonic) are still:
+- 📝 Displayed in terminal
+- 📋 Copied to clipboard
+- 💾 Saved as QR code (if -o flag is used)
 
 ## 🏗️ Project Structure
 ```
