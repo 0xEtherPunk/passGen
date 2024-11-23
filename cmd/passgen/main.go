@@ -16,12 +16,16 @@ func main() {
 	var useBip39 bool
 	var useShort bool
 	var lang string
+	var outputFile string
+	var qrSize int
 
 	flag.IntVar(&length, "length", 0, "Password length (default 24-28)")
 	flag.IntVar(&length, "l", 0, "Password length (shorthand)")
 	flag.BoolVar(&useBip39, "bip39", false, "Generate BIP39 mnemonic")
 	flag.BoolVar(&useBip39, "b", false, "Generate BIP39 mnemonic (shorthand)")
 	flag.BoolVar(&useShort, "12", false, "Generate 12-word mnemonic (default is 24)")
+	flag.StringVar(&outputFile, "o", "", "Output file for QR code (PNG format)")
+	flag.IntVar(&qrSize, "s", 256, "QR code size in pixels (default: 256)")
 
 	// Флаги для языков
 	var langRu, langEn, langJp, langFr, langIt, langKo, langCn, langEs bool
@@ -95,11 +99,19 @@ func main() {
 		fmt.Println("Copied to clipboard")
 	}
 
-	qrCode, err := qr.Generate(result)
-	if err != nil {
-		log.Printf("Failed to create QR code: %v", err)
+	if outputFile != "" {
+		if err := qr.GenerateToFile(result, outputFile, qrSize); err != nil {
+			log.Printf("Failed to save QR code to file: %v", err)
+		} else {
+			fmt.Printf("QR code saved to: %s\n", outputFile)
+		}
 	} else {
-		fmt.Println("\nQR code:")
-		fmt.Println(qrCode)
+		qrCode, err := qr.Generate(result)
+		if err != nil {
+			log.Printf("Failed to create QR code: %v", err)
+		} else {
+			fmt.Println("\nQR code:")
+			fmt.Println(qrCode)
+		}
 	}
 }
