@@ -13,49 +13,24 @@
 
 ## 🎯 Overview
 
-PassGen combines secure password generation with BIP39 mnemonic phrase support, offering:
+PassGen combines secure password generation with BIP39 mnemonic phrase support and encryption capabilities:
 - 🛡️ Cryptographically secure generation using /dev/urandom
 - 🌍 Multi-language BIP39 support
+- 🔒 XChaCha20-Poly1305 encryption
+- 📱 QR code generation and reading
 - 📋 Instant clipboard integration
-- 📱 Terminal QR code display
 
 ## ⚡ Quick Start
 
-### Installation Options
-
-1. Latest release (recommended):
 ```bash
 go install github.com/0xEtherPunk/passGen/cmd/passgen@latest
-```
-
-2. Specific version:
-```bash
-go install github.com/0xEtherPunk/passGen/cmd/passgen@v1.1.0
-```
-
-3. From source:
-```bash
-# Clone repository
-git clone https://github.com/0xEtherPunk/passGen.git
-cd passGen
-
-# Install locally
-go install ./cmd/passgen
-```
-
-4. Manual build:
-```bash
-git clone https://github.com/0xEtherPunk/passGen.git
-cd passGen
-go build -o passgen cmd/passgen/main.go
-sudo mv passgen /usr/local/bin/  # Optional: make globally available
 ```
 
 ## 🛠️ Usage
 
 ### 🔑 Password Generation
 ```bash
-# Standard password (24-28 characters)
+# Generate password (24-28 characters)
 passgen
 
 # Custom length password
@@ -63,73 +38,51 @@ passgen -l 32
 ```
 
 ### 🎲 BIP39 Mnemonic Generation
-
-#### Default Usage
 ```bash
-passgen -b         # 24 words in English
-passgen -b -12     # 12 words in English
+# English (default, 24 words)
+passgen -b
+
+# Short version (12 words)
+passgen -b -12
+
+# Available languages:
+passgen -b -en     # 🇬🇧 English (default)
+passgen -b -ru     # 🇷🇺 Russian (Русский)
+passgen -b -jp     # 🇯🇵 Japanese (日本語)
+passgen -b -cn     # 🇨🇳 Chinese (简体中文)
+passgen -b -fr     # 🇫🇷 French (Français)
+passgen -b -it     # 🇮🇹 Italian (Italiano)
+passgen -b -ko     # 🇰🇷 Korean (한국어)
+passgen -b -es     # 🇪🇸 Spanish (Español)
+```
+
+### 🔐 Encryption & QR Codes
+```bash
+# Encrypt text and generate QR code
+passgen -e "secret message" -p "mypassword" -o secret.png
+
+# Decrypt from QR code
+passgen -d secret.png -p "mypassword"
+
+# Encrypt with custom QR size (default: 256x256)
+passgen -e "secret" -p "pass" -o large.png -s 512
+
+# Pipe support
+echo "secret text" | passgen -e -p "pass" -o qr.png
+cat file.txt | passgen -e -p "pass" -o qr.png
 ```
 
 ### 🔍 Help Command
 ```bash
-# Show all available options
 passgen -help
 passgen -h
-
-# Output includes:
-  -12
-        Generate 12-word mnemonic (default is 24)
-  -b, -bip39
-        Generate BIP39 mnemonic
-  -l, -length int
-        Password length (default 24-28)
-  -o string
-        Output file for QR code (PNG format)
-  -s int
-        QR code size in pixels (default: 256)
-# Language options:
-  -en    Use English wordlist (default)    # 🇬🇧
-  -ru    Use Russian wordlist              # 🇷🇺
-  -jp    Use Japanese wordlist             # 🇯🇵
-  -cn    Use Chinese wordlist              # 🇨🇳
-  -fr    Use French wordlist               # 🇫🇷
-  -it    Use Italian wordlist              # 🇮🇹
-  -ko    Use Korean wordlist               # 🇰🇷
-  -es    Use Spanish wordlist              # 🇪🇸
 ```
 
-### 📤 Output Features
-Every generated password or mnemonic is automatically:
+## 📤 Output Features
+Every generated output is automatically:
 - 📝 Displayed in terminal
 - 📋 Copied to clipboard
-- 📱 Converted to QR code
-
-### QR Code Options
-```bash
-# Display QR in terminal (default)
-passgen -b
-
-# Save QR as PNG file (default size: 256x256)
-passgen -b -o mnemonic.png
-
-# Save QR with custom size (in pixels)
-passgen -b -o mnemonic.png -s 512    # 512x512
-passgen -b -o mnemonic.png -s 1024   # 1024x1024
-
-# Save QR with custom path
-passgen -b -o ~/Documents/mnemonic.png
-passgen -b -o ../backup/phrase.png
-
-# Examples with different options combined
-passgen -b -12 -ru -o russian-12words.png -s 512     # Russian 12-word phrase, 512x512 QR
-passgen -b -jp -o ~/backup/japanese.png -s 1024      # Japanese 24-word phrase, 1024x1024 QR
-passgen -l 32 -o password.png                        # 32-char password QR
-```
-
-All outputs (password/mnemonic) are still:
-- 📝 Displayed in terminal
-- 📋 Copied to clipboard
-- 💾 Saved as QR code (if -o flag is used)
+- 📱 Generated as QR code (if -o flag is used)
 
 ## 🏗️ Project Structure
 ```
@@ -140,19 +93,13 @@ passGen/
 ├── internal/
 │   ├── bip39/               # 🎲 BIP39 implementation
 │   │   ├── wordlist/        # 🌐 Language wordlists
-│   │   │   ├── en.txt      # English
-│   │   │   ├── ru.txt      # Russian
-│   │   │   ├── jp.txt      # Japanese
-│   │   │   ├── cn.txt      # Chinese
-│   │   │   ├── fr.txt      # French
-│   │   │   ├── it.txt      # Italian
-│   │   │   ├── ko.txt      # Korean
-│   │   │   └── es.txt      # Spanish
-│   │   ├── bip39.go        # Core BIP39 logic
-│   │   └── wordlist.go     # Wordlist handling
+│   │   ├── bip39.go        
+│   │   └── wordlist.go     
+│   ├── crypto/              # 🔒 Encryption
+│   │   └── xchacha.go       # XChaCha20-Poly1305
 │   ├── clipboard/           # 📋 Clipboard operations
 │   ├── generator/           # 🎯 Password generation
-│   └── qr/                  # 📱 QR code generation
+│   └── qr/                  # 📱 QR code operations
 └── README.md
 ```
 
@@ -169,12 +116,12 @@ MIT © [0xEtherPunk](https://github.com/0xEtherPunk)
 
 ### 🌟 If you find PassGen useful, please star it on GitHub!
 
-</div>
+[![GitHub stars](https://img.shields.io/github/stars/0xEtherPunk/passGen?style=social)](https://github.com/0xEtherPunk/passGen)
 
----
+</div>
 
 > 🌈 **Pro tip**: Pipe the output through `lolcat` for some extra color magic:
 > ```bash
-> passgen | lolcat
-> passgen -b -12 -cn | lolcat
+> passgen -b | lolcat
+> passgen -e "secret" -p "pass" | lolcat
 > ```
