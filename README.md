@@ -21,10 +21,10 @@
 
 ## 📦 Installation
 ```bash
-go install github.com/username/passgen@latest
+go install github.com/0xEtherPunk/passgen@latest
 
 # Optional: Create alias
-echo 'alias pg="passgen"' >> ~/.bashrc
+echo 'alias pg="passgen"' >> ~/.bashrc # or zsh
 ```
 
 ## 🎯 Command Flags
