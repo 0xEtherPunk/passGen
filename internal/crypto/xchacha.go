@@ -24,39 +24,26 @@ type CryptoData struct {
 	Salt       string `json:"salt"`       // base64 encoded
 	Nonce      string `json:"nonce"`      // base64 encoded
 	Ciphertext string `json:"ciphertext"` // base64 encoded
-	Version    int    `json:"version"`    // версия формата для обратной совместимости
+	Version    int    `json:"version"`    // версия формата
 }
 
 type XChaCha struct {
 	aead     cipher.AEAD
 	password string
-	salt     []byte
 }
 
 // NewXChaCha создает новый экземпляр XChaCha20-Poly1305 с паролем
 func NewXChaCha(password string) (*XChaCha, error) {
+	if password == "" {
+		return nil, fmt.Errorf("password cannot be empty")
+	}
+
 	return &XChaCha{
 		password: password,
 	}, nil
 }
 
-func (x *XChaCha) initAEAD(salt []byte) error {
-	key, err := scrypt.Key([]byte(x.password), salt, scryptN, scryptR, scryptP, keyLen)
-	if err != nil {
-		return fmt.Errorf("failed to derive key: %v", err)
-	}
-
-	aead, err := chacha20poly1305.NewX(key)
-	if err != nil {
-		return fmt.Errorf("failed to create AEAD: %v", err)
-	}
-
-	x.aead = aead
-	x.salt = salt
-	return nil
-}
-
-// Encrypt шифрует данные и возвращает base64-encoded строку
+// Encrypt шифрует данные и возвращает JSON в base64
 func (x *XChaCha) Encrypt(plaintext []byte) (string, error) {
 	// Генерируем соль
 	salt := make([]byte, 32)
@@ -64,18 +51,25 @@ func (x *XChaCha) Encrypt(plaintext []byte) (string, error) {
 		return "", fmt.Errorf("failed to generate salt: %v", err)
 	}
 
-	if err := x.initAEAD(salt); err != nil {
-		return "", err
+	// Генерируем ключ
+	key, err := scrypt.Key([]byte(x.password), salt, scryptN, scryptR, scryptP, keyLen)
+	if err != nil {
+		return "", fmt.Errorf("failed to derive key: %v", err)
 	}
 
-	// Генерируем nonce
-	nonce := make([]byte, x.aead.NonceSize())
+	aead, err := chacha20poly1305.NewX(key)
+	if err != nil {
+		return "", fmt.Errorf("failed to create AEAD: %v", err)
+	}
+
+	// Генерируем новый nonce для каждого шифрования
+	nonce := make([]byte, aead.NonceSize())
 	if _, err := rand.Read(nonce); err != nil {
 		return "", fmt.Errorf("failed to generate nonce: %v", err)
 	}
 
 	// Шифруем
-	ciphertext := x.aead.Seal(nil, nonce, plaintext, nil)
+	ciphertext := aead.Seal(nil, nonce, plaintext, nil)
 
 	// Создаем структуру с данными
 	data := CryptoData{
@@ -91,17 +85,19 @@ func (x *XChaCha) Encrypt(plaintext []byte) (string, error) {
 		return "", fmt.Errorf("failed to marshal data: %v", err)
 	}
 
+	// Кодируем весь JSON в base64
 	return base64.StdEncoding.EncodeToString(jsonData), nil
 }
 
-// Decrypt расшифровывает base64-encoded строку
+// Decrypt расшифровывает JSON из base64
 func (x *XChaCha) Decrypt(encoded string) ([]byte, error) {
-	// Декодируем JSON
+	// Декодируем base64 в JSON
 	jsonData, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode base64: %v", err)
 	}
 
+	// Парсим JSON
 	var data CryptoData
 	if err := json.Unmarshal(jsonData, &data); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal data: %v", err)
@@ -128,13 +124,19 @@ func (x *XChaCha) Decrypt(encoded string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to decode ciphertext: %v", err)
 	}
 
-	// Инициализируем AEAD с солью
-	if err := x.initAEAD(salt); err != nil {
-		return nil, err
+	// Генерируем ключ
+	key, err := scrypt.Key([]byte(x.password), salt, scryptN, scryptR, scryptP, keyLen)
+	if err != nil {
+		return nil, fmt.Errorf("failed to derive key: %v", err)
+	}
+
+	aead, err := chacha20poly1305.NewX(key)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AEAD: %v", err)
 	}
 
 	// Расшифровываем
-	plaintext, err := x.aead.Open(nil, nonce, ciphertext, nil)
+	plaintext, err := aead.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decrypt: %v", err)
 	}

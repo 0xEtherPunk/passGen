@@ -14,7 +14,7 @@ import (
 
 // Generate creates QR code as ASCII art
 func Generate(text string) (string, error) {
-	qr, err := goqrcode.New(text, goqrcode.Medium)
+	qr, err := goqrcode.New(text, goqrcode.Low)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate QR code: %v", err)
 	}
@@ -26,7 +26,7 @@ func GenerateToFile(text string, filename string, size int) error {
 	if size == 0 {
 		size = 256
 	}
-	err := goqrcode.WriteFile(text, goqrcode.Medium, size, filename)
+	err := goqrcode.WriteFile(text, goqrcode.Low, size, filename)
 	if err != nil {
 		return fmt.Errorf("failed to save QR code to file: %v", err)
 	}
