@@ -18,7 +18,7 @@ func Generate(text string) (string, error) {
 // GenerateToFile creates QR code and saves it as PNG file
 func GenerateToFile(text string, filename string, size int) error {
 	if size == 0 {
-		size = 256 // default size
+		size = 256
 	}
 	err := qrcode.WriteFile(text, qrcode.Medium, size, filename)
 	if err != nil {
